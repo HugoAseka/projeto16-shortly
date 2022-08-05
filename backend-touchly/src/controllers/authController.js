@@ -53,8 +53,10 @@ export async function signIn(req, res) {
   });
 
   const { error } = userReqSchema.validate(userReq);
-  if (error) {
-    return res.sendStatus(422);
+  if (error && userReq.email.length === 0) {
+    return res.status(422).send("Email não pode estar vazio");
+  } else if (error && userReq.password.length === 0) {
+    return res.status(422).send("Senha não pode estar vazia");
   }
 
   const { rows: userdb } = await connection.query(
