@@ -39,7 +39,7 @@ export async function signUp(req, res) {
       [newUser.name, newUser.email, encryptedPassword]
     );
 
-    res.send(201);
+    res.sendStatus(201);
   } catch {
     res.sendStatus(500);
   }

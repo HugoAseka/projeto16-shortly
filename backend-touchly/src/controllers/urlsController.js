@@ -1,5 +1,6 @@
 import connection from "../dbStrategy/postgres.js";
 import { nanoid } from "nanoid";
+import { query } from "express";
 
 export async function urlShorten(req, res) {
   const { url } = req.body;
@@ -56,4 +57,30 @@ export async function redirectToUrl(req, res) {
   ]);
 
   res.redirect(urlObj.url);
+}
+
+export async function deleteUrl(req, res) {
+  const { authorization } = req.headers;
+  const { id: urlId } = req.params;
+  const token = authorization.replace("Bearer ", "");
+
+  const { rows: aux } = await connection.query(
+    `SELECT * FROM urls WHERE id = $1`,
+    [urlId]
+  );
+  const urlObj = aux[0];
+  const { rows: aux1 } = await connection.query(
+    `SELECT t."userId" FROM tokens t WHERE token = $1`,
+    [token]
+  );
+  const tokenObj = aux1[0];
+  console.log(urlObj);
+  if (!urlObj) {
+    res.sendStatus(404);
+  } else if (tokenObj.userId === urlObj.userId) {
+    await connection.query(`DELETE FROM urls WHERE id = $1`,[urlId]);
+    res.sendStatus(204);
+  } else {
+    res.sendStatus(401);
+  }
 }
