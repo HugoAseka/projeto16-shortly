@@ -1,6 +1,5 @@
 import connection from "../dbStrategy/postgres.js";
 import { nanoid } from "nanoid";
-import { query } from "express";
 
 export async function urlShorten(req, res) {
   const { url } = req.body;
@@ -20,6 +19,11 @@ export async function urlShorten(req, res) {
   await connection.query(
     `INSERT INTO urls (url,"shortUrl","userId") VALUES ($1,$2,$3)`,
     [url, shortUrl, user.id]
+  );
+  await connection.query(
+    `
+  UPDATE users SET "linksCount" = $1 WHERE id = $2`,
+    [user.linksCount + 1, user.id]
   );
 
   res.status(201).send({
@@ -78,15 +82,16 @@ export async function deleteUrl(req, res) {
   );
   const urlObj = aux[0];
   const { rows: aux1 } = await connection.query(
-    `SELECT t."userId" FROM tokens t WHERE token = $1`,
+    `SELECT t."userId", u."linksCount" FROM tokens t JOIN users u ON t."userId" = u.id WHERE token = $1`,
     [token]
   );
   const tokenObj = aux1[0];
-  //   console.log(urlObj);
+
   if (!urlObj) {
     res.sendStatus(404);
   } else if (tokenObj.userId === urlObj.userId) {
     await connection.query(`DELETE FROM urls WHERE id = $1`, [urlId]);
+    await connection.query(`UPDATE users SET "linksCount" = $1 WHERE id = $2`,[tokenObj.linksCount - 1, tokenObj.userId])
     res.sendStatus(204);
   } else {
     res.sendStatus(401);

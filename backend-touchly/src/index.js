@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import authRouter from "./routes/authRouter.js"
 import urlsRouter from "./routes/urlsRouter.js"
 import usersRouter from "./routes/usersRouter.js"
-// import rankingRouter from "./routes/rankingRouter.js"
+import rankingRouter from "./routes/rankingRouter.js"
 
 
 dotenv.config();
@@ -17,7 +17,7 @@ app.use(express.json());
 app.use(authRouter);
 app.use(urlsRouter);
 app.use(usersRouter);
-
+app.use(rankingRouter);
 
 
 
