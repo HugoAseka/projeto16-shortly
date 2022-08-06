@@ -44,19 +44,27 @@ export async function getUrls(req, res) {
 
 export async function redirectToUrl(req, res) {
   const { shortUrl } = req.params;
-  const { rows: auxArr } = await connection.query(
-    `SELECT * FROM urls WHERE "shortUrl" = $1 `,
-    [shortUrl]
-  );
-  const urlObj = auxArr[0];
-  const x = urlObj.views + 1;
-  console.log(urlObj.views);
-  await connection.query(`UPDATE urls SET views = $1 WHERE id = $2`, [
-    x,
-    urlObj.id,
-  ]);
 
-  res.redirect(urlObj.url);
+  try {
+    const { rows } = await connection.query(
+      `SELECT * FROM urls WHERE "shortUrl" = $1 `,
+      [shortUrl]
+    );
+    const urlObj = rows[0];
+
+    if (!urlObj) {
+      return res.sendStatus(404);
+    }
+
+    await connection.query(`UPDATE urls SET "visitCount" = $1 WHERE id = $2`, [
+      urlObj.visitCount + 1,
+      urlObj.id,
+    ]);
+
+    return res.redirect(urlObj.url);
+  } catch (error) {
+    res.status(500).send(error);
+  }
 }
 
 export async function deleteUrl(req, res) {
@@ -74,11 +82,11 @@ export async function deleteUrl(req, res) {
     [token]
   );
   const tokenObj = aux1[0];
-  console.log(urlObj);
+  //   console.log(urlObj);
   if (!urlObj) {
     res.sendStatus(404);
   } else if (tokenObj.userId === urlObj.userId) {
-    await connection.query(`DELETE FROM urls WHERE id = $1`,[urlId]);
+    await connection.query(`DELETE FROM urls WHERE id = $1`, [urlId]);
     res.sendStatus(204);
   } else {
     res.sendStatus(401);
