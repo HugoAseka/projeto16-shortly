@@ -14,4 +14,13 @@ const databaseConfig = {
 
 const connection = new Pool(databaseConfig);
 
+// const connection = new Pool({
+//   host: "localhost",
+//   port: 5432,
+//   user: "postgres",
+//   password: "",
+//   database: "shortly",
+// });
+
+
 export default connection;
